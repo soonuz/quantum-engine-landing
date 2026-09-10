@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Engine - Sci-Fi Landing Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            background: #0a0e27;
+            font-family: 'Courier New', monospace;
+            color: #00ff88;
+        }
+
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .scroll-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 400vh;
+        }
+
+        .section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .hud-content {
+            text-align: center;
+            pointer-events: none;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8),
+                        0 0 40px rgba(0, 255, 136, 0.4);
+            letter-spacing: 3px;
+            opacity: 0;
+        }
+
+        .section-1 .hud-content {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .section-2 .hud-content {
+            font-size: 2.5rem;
+            color: #00aaff;
+        }
+
+        .section-3 .hud-content {
+            font-size: 2rem;
+            color: #ff00ff;
+        }
+
+        .section-4 .hud-content {
+            font-size: 2.2rem;
+            color: #00ff88;
+        }
+
+        .hud-subtitle {
+            font-size: 0.8rem;
+            margin-top: 20px;
+            color: #00ff88;
+            opacity: 0.7;
+            letter-spacing: 2px;
+        }
+
+        .particles-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse at 50% 50%, 
+                        rgba(0, 255, 136, 0.05) 0%,
+                        rgba(0, 170, 255, 0.02) 50%,
+                        rgba(10, 14, 39, 1) 100%);
+        }
+
+        .scan-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 136, 0.03) 0px,
+                rgba(0, 255, 136, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            animation: scanlines 8s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="particles-bg"></div>
+    <canvas id="canvas"></canvas>
+    <div class="scan-line"></div>
+    <div class="vignette"></div>
+    
+    <div class="scroll-container">
+        <section class="section section-1">
+            <div class="hud-content">
+                <div>QUANTUM CORE v4.0</div>
+                <div class="hud-subtitle">INITIALIZING NEON CONSCIOUSNESS</div>
+            </div>
+        </section>
+        <section class="section section-2">
+            <div class="hud-content">
+                <div>NEURAL INTERFACE ACTIVE</div>
+                <div class="hud-subtitle">SCANNING DIMENSIONAL FREQUENCIES</div>
+            </div>
+        </section>
+        <section class="section section-3">
+            <div class="hud-content">
+                <div>KINETIC DISASSEMBLY</div>
+                <div class="hud-subtitle">EXPLODING EXOTIC MATTER LATTICE</div>
+            </div>
+        </section>
+        <section class="section section-4">
+            <div class="hud-content">
+                <div>REINTEGRATION COMPLETE</div>
+                <div class="hud-subtitle">QUANTUM COHERENCE RESTORED</div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Scene Setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0e27);
+        scene.fog = new THREE.Fog(0x0a0e27, 50, 200);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 15;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 1.5;
+        document.body.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+
+        const pointLight1 = new THREE.PointLight(0x00ff88, 2, 100);
+        pointLight1.position.set(20, 20, 20);
+        pointLight1.castShadow = true;
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0x00aaff, 1.5, 80);
+        pointLight2.position.set(-20, -20, 10);
+        scene.add(pointLight2);
+
+        const pointLight3 = new THREE.PointLight(0xff00ff, 1, 60);
+        pointLight3.position.set(0, 0, 30);
+        scene.add(pointLight3);
+
+        // Create Quantum Engine
+        const engineGroup = new THREE.Group();
+        scene.add(engineGroup);
+
+        // Material Definitions
+        const neonMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x00ff88,
+            emissive: 0x00ff88,
+            metalness: 0.8,
+            roughness: 0.2,
+            transmission: 0.3,
+            ior: 2.4
+        });
+
+        const neonBlueMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x00aaff,
+            emissive: 0x00aaff,
+            metalness: 0.8,
+            roughness: 0.2,
+            transmission: 0.2,
+            ior: 2.4
+        });
+
+        const neonMagentaMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xff00ff,
+            emissive: 0xff00ff,
+            metalness: 0.7,
+            roughness: 0.3,
+            transmission: 0.1
+        });
+
+        const darkMatMaterial = new THREE.MeshStandardMaterial({
+            color: 0x1a1f3a,
+            metalness: 0.2,
+            roughness: 0.8,
+            emissive: 0x000000
+        });
+
+        const chromeMetalMaterial = new THREE.MeshStandardMaterial({
+            color: 0xcccccc,
+            metalness: 0.95,
+            roughness: 0.05
+        });
+
+        const glassMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x00ff88,
+            transmission: 0.8,
+            opacity: 0.3,
+            metalness: 0.0,
+            roughness: 0.05,
+            ior: 1.5
+        });
+
+        // Layer 1: Inner Energy Core
+        const coreGroup = new THREE.Group();
+        const coreSphere = new THREE.Mesh(
+            new THREE.IcosahedronGeometry(3, 5),
+            neonMaterial
+        );
+        coreSphere.castShadow = true;
+        coreSphere.receiveShadow = true;
+        coreGroup.add(coreSphere);
+
+        const coreGlow = new THREE.Mesh(
+            new THREE.IcosahedronGeometry(3.2, 5),
+            new THREE.MeshPhysicalMaterial({
+                color: 0x00ff88,
+                emissive: 0x00ff88,
+                transparent: true,
+                opacity: 0.3
+            })
+        );
+        coreGroup.add(coreGlow);
+
+        engineGroup.add(coreGroup);
+        coreGroup.userData.originalPosition = { x: 0, y: 0, z: 0 };
+
+        // Layer 2: Circuit Layer (Wireframe Rings)
+        const circuitGroup = new THREE.Group();
+        for (let i = 0; i < 3; i++) {
+            const ring = new THREE.Mesh(
+                new THREE.TorusGeometry(5 + i * 1.2, 0.3, 16, 32),
+                i % 2 === 0 ? neonBlueMaterial : neonMaterial
+            );
+            ring.rotation.x = Math.random() * Math.PI;
+            ring.rotation.y = Math.random() * Math.PI;
+            ring.castShadow = true;
+            circuitGroup.add(ring);
+        }
+        engineGroup.add(circuitGroup);
+        circuitGroup.userData.originalPosition = { x: 0, y: 0, z: 0 };
+
+        // Layer 3: Piston & Turbine Rings
+        const pistonGroup = new THREE.Group();
+        for (let i = 0; i < 4; i++) {
+            const cylinder = new THREE.Mesh(
+                new THREE.CylinderGeometry(6 + i * 0.5, 6 + i * 0.5, 0.5, 32),
+                chromeMetalMaterial
+            );
+            cylinder.position.y = (i - 1.5) * 2;
+            cylinder.castShadow = true;
+            cylinder.receiveShadow = true;
+            pistonGroup.add(cylinder);
+
+            // Add teeth/details to turbine
+            const teethGeometry = new THREE.ConeGeometry(0.4, 0.8, 8);
+            for (let t = 0; t < 16; t++) {
+                const tooth = new THREE.Mesh(teethGeometry, chromeMetalMaterial);
+                const angle = (t / 16) * Math.PI * 2;
+                tooth.position.x = Math.cos(angle) * (5.5 + i * 0.5);
+                tooth.position.z = Math.sin(angle) * (5.5 + i * 0.5);
+                tooth.position.y = (i - 1.5) * 2;
+                tooth.rotation.z = angle;
+                tooth.castShadow = true;
+                pistonGroup.add(tooth);
+            }
+        }
+        engineGroup.add(pistonGroup);
+        pistonGroup.userData.originalPosition = { x: 0, y: 0, z: 0 };
+
+        // Layer 4: Outer Exoskeleton - Dark Panels
+        const exoGroup = new THREE.Group();
+        const panelPositions = [
+            { x: 8, y: 0, z: 0, rx: 0, ry: Math.PI / 4, rz: 0 },
+            { x: -8, y: 0, z: 0, rx: 0, ry: -Math.PI / 4, rz: 0 },
+            { x: 0, y: 8, z: 0, rx: Math.PI / 4, ry: 0, rz: 0 },
+            { x: 0, y: -8, z: 0, rx: -Math.PI / 4, ry: 0, rz: 0 },
+            { x: 0, y: 0, z: 8, rx: 0, ry: 0, rz: 0 },
+            { x: 0, y: 0, z: -8, rx: 0, ry: Math.PI / 2, rz: 0 }
+        ];
+
+        panelPositions.forEach((pos, idx) => {
+            const panelGeometry = new THREE.BoxGeometry(3, 3, 0.3);
+            const panel = new THREE.Mesh(
+                panelGeometry,
+                idx % 2 === 0 ? darkMatMaterial : glassMaterial
+            );
+            panel.position.set(pos.x, pos.y, pos.z);
+            panel.rotation.set(pos.rx, pos.ry, pos.rz);
+            panel.castShadow = true;
+            panel.receiveShadow = true;
+            exoGroup.add(panel);
+        });
+
+        engineGroup.add(exoGroup);
+        exoGroup.userData.originalPosition = { x: 0, y: 0, z: 0 };
+
+        // Layer 5: Energy Streams (Neon Lines)
+        const streamGroup = new THREE.Group();
+        for (let i = 0; i < 6; i++) {
+            const curve = new THREE.LineCurve3(
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(
+                    Math.cos((i / 6) * Math.PI * 2) * 10,
+                    Math.sin((i / 6) * Math.PI * 2) * 10,
+                    Math.cos((i / 6) * Math.PI * 4) * 5
+                )
+            );
+            const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(20));
+            const line = new THREE.Line(
+                geometry,
+                new THREE.LineBasicMaterial({
+                    color: i % 2 === 0 ? 0x00ff88 : 0x00aaff,
+                    linewidth: 3,
+                    emissive: i % 2 === 0 ? 0x00ff88 : 0x00aaff
+                })
+            );
+            streamGroup.add(line);
+        }
+        engineGroup.add(streamGroup);
+        streamGroup.userData.originalPosition = { x: 0, y: 0, z: 0 };
+
+        // Layer 6: Rotating Vortex Ring
+        const vortexGroup = new THREE.Group();
+        const vortexRing = new THREE.Mesh(
+            new THREE.TorusGeometry(7, 0.5, 16, 64),
+            neonMagentaMaterial
+        );
+        vortexRing.castShadow = true;
+        vortexGroup.add(vortexRing);
+        engineGroup.add(vortexGroup);
+        vortexGroup.userData.originalPosition = { x: 0, y: 0, z: 0 };
+
+        // Store all layers for animation
+        const layers = [coreGroup, circuitGroup, pistonGroup, exoGroup, streamGroup, vortexGroup];
+
+        // Mouse parallax
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotation
+            engineGroup.rotation.x += 0.0005;
+            engineGroup.rotation.y += 0.001;
+            coreGroup.rotation.z += 0.003;
+            vortexGroup.rotation.z -= 0.002;
+            pistonGroup.rotation.x += 0.002;
+
+            // Mouse parallax effect
+            camera.position.x = mouseX * 5;
+            camera.position.y = mouseY * 5;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // GSAP Scroll Animations
+        gsap.timeline({
+            scrollTrigger: {
+                trigger: '.section-1',
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 0.5,
+                markers: false
+            }
+        })
+        .to('.section-1 .hud-content', { opacity: 1, duration: 0.5 }, 0)
+        .to('.section-1 .hud-content', { opacity: 0, duration: 0.5 }, '50%');
+
+        // Section 2: Zoom & Orbit
+        gsap.timeline({
+            scrollTrigger: {
+                trigger: '.section-2',
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 0.5,
+                markers: false
+            }
+        })
+        .to('.section-2 .hud-content', { opacity: 1, duration: 0.5 }, 0)
+        .to(camera.position, { z: 5, duration: 1 }, 0)
+        .to(engineGroup.rotation, { x: 0.5, y: 1 }, 0)
+        .to('.section-2 .hud-content', { opacity: 0, duration: 0.5 }, '50%');
+
+        // Section 3: Exploded View
+        gsap.timeline({
+            scrollTrigger: {
+                trigger: '.section-3',
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 0.5,
+                markers: false
+            }
+        })
+        .to('.section-3 .hud-content', { opacity: 1, duration: 0.5 }, 0)
+        .to(coreGroup.position, { z: 0, duration: 1 }, 0)
+        .to(circuitGroup.position, { y: -15, z: 5, duration: 1 }, 0)
+        .to(pistonGroup.position, { y: 15, z: -5, duration: 1 }, 0)
+        .to(exoGroup.position, { y: -20, x: 10, duration: 1 }, 0)
+        .to(streamGroup.position, { x: -15, z: 10, duration: 1 }, 0)
+        .to(vortexGroup.position, { x: 15, y: 10, z: -15, duration: 1 }, 0)
+        .to(camera.position, { z: 35, duration: 1 }, 0)
+        .to('.section-3 .hud-content', { opacity: 0, duration: 0.5 }, '50%');
+
+        // Section 4: Re-assemble
+        gsap.timeline({
+            scrollTrigger: {
+                trigger: '.section-4',
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 0.5,
+                markers: false
+            }
+        })
+        .to('.section-4 .hud-content', { opacity: 1, duration: 0.5 }, 0)
+        .to([coreGroup.position, circuitGroup.position, pistonGroup.position, 
+             exoGroup.position, streamGroup.position, vortexGroup.position],
+            { x: 0, y: 0, z: 0, duration: 1 }, 0)
+        .to(camera.position, { z: 15, duration: 1 }, 0)
+        .to(engineGroup.rotation, { x: 0, y: 0, duration: 1 }, 0)
+        .to('.section-4 .hud-content', { opacity: 0, duration: 0.5 }, '50%');
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Performance optimization
+        ScrollTrigger.refresh();
+    </script>
+</body>
+</html>
